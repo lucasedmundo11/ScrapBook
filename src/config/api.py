@@ -142,7 +142,7 @@ class APILogger:
         self.logger.handlers.clear()
         
         # Set log level
-        log_level = getattr(logging, APIConfig.API_LOG_LEVEL.upper(), logging.INFO)
+        log_level = getattr(logging, APIConfig.LOG_LEVEL.upper(), logging.INFO)
         self.logger.setLevel(log_level)
         
         # Create formatters
