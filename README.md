@@ -37,12 +37,12 @@ ScrapBook/
 │   ├── api/              # API Flask com endpoints RESTful
 │   ├── scripts/          # Sistema de web scraping
 │   ├── config/           # Configurações centralizadas
-│   └── models/           # Modelos SQLAlchemy e Pydantic
 ├── data/
 │   ├── csv/              # Dados extraídos em CSV
 │   ├── json/             # Dados em formato JSON
 │   └── logs/             # Logs do sistema
 ├── docs/
+│   └── resources/        # Documentação de Funcionalidades e Requisitos Funcionais
 │   └── swagger/          # Documentação Swagger YAML
 └── tests/                # Testes automatizados
 ```
