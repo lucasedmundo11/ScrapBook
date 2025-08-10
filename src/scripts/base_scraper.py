@@ -161,9 +161,13 @@ class BaseScraper:
         
         # Ensure CSV directory exists
         csv_dir = './data/csv'
-        os.makedirs(csv_dir, exist_ok=True)
-        
-        filepath = os.path.join(csv_dir, filename)
+        try:
+            os.makedirs(csv_dir, exist_ok=True)
+            filepath = os.path.join(csv_dir, filename)
+        except (OSError, PermissionError):
+            # Can't create directory, likely in serverless environment
+            self.logger.warning("Unable to create CSV directory in serverless environment")
+            return
         
         try:
             with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
@@ -191,9 +195,13 @@ class BaseScraper:
         
         # Ensure JSON directory exists
         json_dir = './data/json'
-        os.makedirs(json_dir, exist_ok=True)
-        
-        filepath = os.path.join(json_dir, filename)
+        try:
+            os.makedirs(json_dir, exist_ok=True)
+            filepath = os.path.join(json_dir, filename)
+        except (OSError, PermissionError):
+            # Can't create directory, likely in serverless environment
+            self.logger.warning("Unable to create JSON directory in serverless environment")
+            return
         
         try:
             with open(filepath, 'w', encoding='utf-8') as jsonfile:

@@ -94,9 +94,13 @@ class ScrapingOrchestrator:
             self.category_scraper.save_to_csv(validated_file, validated_categories)
             
             # Save stats as JSON using config directory
-            os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
-            with open(stats_path, 'w', encoding='utf-8') as f:
-                json.dump(stats, f, indent=2, ensure_ascii=False, default=str)
+            try:
+                os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
+                with open(stats_path, 'w', encoding='utf-8') as f:
+                    json.dump(stats, f, indent=2, ensure_ascii=False, default=str)
+            except (OSError, PermissionError):
+                # Can't write files in serverless environment
+                logger.warning("Unable to save stats file in serverless environment")
             
             logger.info(f"Category data saved to {categories_file}, {validated_file}, {stats_file}")
         
@@ -265,12 +269,16 @@ class ScrapingOrchestrator:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             report_file = f"comprehensive_report_{timestamp}.json"
             
-            os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
-            report_path = os.path.join(ScraperConfig.JSON_DIR, report_file)
-            with open(report_path, 'w', encoding='utf-8') as f:
-                json.dump(report, f, indent=2, ensure_ascii=False, default=str)
-            
-            logger.info(f"Comprehensive report saved to {report_file}")
+            try:
+                os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
+                report_path = os.path.join(ScraperConfig.JSON_DIR, report_file)
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    json.dump(report, f, indent=2, ensure_ascii=False, default=str)
+                
+                logger.info(f"Comprehensive report saved to {report_file}")
+            except (OSError, PermissionError):
+                # Can't write files in serverless environment
+                logger.warning("Unable to save comprehensive report in serverless environment")
             
         except Exception as e:
             logger.error(f"Error generating comprehensive report: {str(e)}")
@@ -342,10 +350,16 @@ class ScrapingOrchestrator:
             timestamp = pipeline_start.strftime("%Y%m%d_%H%M%S")
             pipeline_file = f"pipeline_results_{timestamp}.json"
             
-            os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
-            pipeline_path = os.path.join(ScraperConfig.JSON_DIR, pipeline_file)
-            with open(pipeline_path, 'w', encoding='utf-8') as f:
-                json.dump(results, f, indent=2, ensure_ascii=False, default=str)
+            try:
+                os.makedirs(ScraperConfig.JSON_DIR, exist_ok=True)
+                pipeline_path = os.path.join(ScraperConfig.JSON_DIR, pipeline_file)
+                with open(pipeline_path, 'w', encoding='utf-8') as f:
+                    json.dump(results, f, indent=2, ensure_ascii=False, default=str)
+                
+                logger.info(f"Pipeline results saved to {pipeline_file}")
+            except (OSError, PermissionError):
+                # Can't write files in serverless environment
+                logger.warning("Unable to save pipeline results in serverless environment")
             
             logger.info(f"Pipeline results saved to {pipeline_file}")
             logger.info(f"=== Full Pipeline Completed Successfully in {duration.total_seconds():.2f} seconds ===")

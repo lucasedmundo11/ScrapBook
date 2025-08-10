@@ -74,11 +74,15 @@ class APIConfig:
     @classmethod
     def create_directories(cls) -> None:
         """Create necessary directories if they don't exist."""
-        os.makedirs(cls.DATA_DIR, exist_ok=True)
-        os.makedirs(cls.DATA_CSV_DIR, exist_ok=True)
-        os.makedirs(cls.DATA_JSON_DIR, exist_ok=True)
-        os.makedirs(cls.DATA_LOGS_DIR, exist_ok=True)
-        os.makedirs(cls.UPLOAD_FOLDER, exist_ok=True)
+        try:
+            os.makedirs(cls.DATA_DIR, exist_ok=True)
+            os.makedirs(cls.DATA_CSV_DIR, exist_ok=True)
+            os.makedirs(cls.DATA_JSON_DIR, exist_ok=True)
+            os.makedirs(cls.DATA_LOGS_DIR, exist_ok=True)
+            os.makedirs(cls.UPLOAD_FOLDER, exist_ok=True)
+        except (OSError, PermissionError):
+            # Can't create directories, likely in serverless environment
+            pass
     
     @classmethod
     def get_jwt_expire_delta(cls) -> timedelta:
@@ -131,58 +135,69 @@ class APILogger:
     
     def setup_logger(self) -> None:
         """Set up logger with file and console handlers."""
-        # Create log directory
-        os.makedirs(self.log_dir, exist_ok=True)
+        # Check if we're in a serverless/read-only environment
+        is_serverless = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
         
         # Clear existing handlers to avoid duplicates
         self.logger.handlers.clear()
         
         # Set log level
-        self.logger.setLevel(getattr(logging, APIConfig.LOG_LEVEL.upper()))
+        log_level = getattr(logging, APIConfig.API_LOG_LEVEL.upper(), logging.INFO)
+        self.logger.setLevel(log_level)
         
         # Create formatters
         detailed_formatter = logging.Formatter(APIConfig.LOG_FORMAT)
         simple_formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'
         )
-        json_formatter = JsonLogFormatter()
         
-        # Console handler for development
+        # Console handler (always available)
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(simple_formatter)
         console_handler.setLevel(logging.INFO)
         self.logger.addHandler(console_handler)
         
-        # File handler for all logs
-        api_log_file = os.path.join(self.log_dir, f"{self.name}.log")
-        file_handler = logging.handlers.RotatingFileHandler(
-            api_log_file,
-            maxBytes=APIConfig.LOG_MAX_BYTES,
-            backupCount=APIConfig.LOG_BACKUP_COUNT,
-            encoding='utf-8'
-        )
-        file_handler.setFormatter(detailed_formatter)
-        file_handler.setLevel(logging.DEBUG)
-        self.logger.addHandler(file_handler)
-        
-        # Error handler for errors and critical issues
-        error_log_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
-        error_handler = logging.handlers.RotatingFileHandler(
-            error_log_file,
-            maxBytes=APIConfig.LOG_MAX_BYTES // 2,
-            backupCount=3,
-            encoding='utf-8'
-        )
-        error_handler.setFormatter(detailed_formatter)
-        error_handler.setLevel(logging.ERROR)
-        self.logger.addHandler(error_handler)
-        
-        # JSON handler for structured logging and analysis
-        json_log_file = os.path.join(self.log_dir, f"{self.name}_structured.jsonl")
-        json_handler = JsonFileHandler(json_log_file)
-        json_handler.setFormatter(json_formatter)
-        json_handler.setLevel(logging.INFO)
-        self.logger.addHandler(json_handler)
+        # Only add file handlers if not in serverless environment
+        if not is_serverless:
+            try:
+                # Create log directory
+                os.makedirs(self.log_dir, exist_ok=True)
+                
+                json_formatter = JsonLogFormatter()
+                
+                # File handler for all logs
+                api_log_file = os.path.join(self.log_dir, f"{self.name}.log")
+                file_handler = logging.handlers.RotatingFileHandler(
+                    api_log_file,
+                    maxBytes=APIConfig.LOG_MAX_BYTES,
+                    backupCount=APIConfig.LOG_BACKUP_COUNT,
+                    encoding='utf-8'
+                )
+                file_handler.setFormatter(detailed_formatter)
+                file_handler.setLevel(logging.DEBUG)
+                self.logger.addHandler(file_handler)
+                
+                # Error handler for critical issues
+                error_log_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
+                error_handler = logging.handlers.RotatingFileHandler(
+                    error_log_file,
+                    maxBytes=APIConfig.LOG_MAX_BYTES // 2,
+                    backupCount=3,
+                    encoding='utf-8'
+                )
+                error_handler.setFormatter(detailed_formatter)
+                error_handler.setLevel(logging.ERROR)
+                self.logger.addHandler(error_handler)
+                
+                # JSON handler for structured logs
+                json_log_file = os.path.join(self.log_dir, f"{self.name}_structured.jsonl")
+                json_handler = JsonFileHandler(json_log_file)
+                json_handler.setFormatter(json_formatter)
+                json_handler.setLevel(logging.INFO)
+                self.logger.addHandler(json_handler)
+            except (OSError, PermissionError) as e:
+                # If file logging fails, just log to console
+                self.logger.warning(f"File logging disabled due to: {e}")
     
     def log_api_request(self, method: str, url: str, status_code: int, 
                        response_time: float, user_id: str = None, error: str = None):
@@ -305,7 +320,11 @@ class JsonFileHandler(logging.Handler):
         """Ensure the log directory exists."""
         directory = os.path.dirname(self.filename)
         if directory:
-            os.makedirs(directory, exist_ok=True)
+            try:
+                os.makedirs(directory, exist_ok=True)
+            except (OSError, PermissionError):
+                # Can't create directory, likely in serverless environment
+                pass
     
     def emit(self, record):
         """Emit a log record to JSON file."""
@@ -313,6 +332,10 @@ class JsonFileHandler(logging.Handler):
             with open(self.filename, 'a', encoding='utf-8') as f:
                 f.write(self.format(record))
                 f.write('\n')
+        except (OSError, PermissionError):
+            # Can't write to file, likely in serverless environment
+            # Fall back to console logging
+            print(f"LOG: {self.format(record)}")
         except Exception:
             self.handleError(record)
 

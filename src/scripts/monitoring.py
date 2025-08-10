@@ -36,8 +36,8 @@ class ScrapingLogger:
     
     def setup_logger(self) -> None:
         """Set up logger with file and console handlers."""
-        # Create log directory
-        os.makedirs(self.log_dir, exist_ok=True)
+        # Check if we're in a serverless/read-only environment
+        is_serverless = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
         
         # Clear existing handlers
         self.logger.handlers.clear()
@@ -53,26 +53,38 @@ class ScrapingLogger:
             '%(asctime)s - %(levelname)s - %(message)s'
         )
         
-        # Console handler
+        # Console handler (always available)
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(simple_formatter)
         console_handler.setLevel(logging.INFO)
         self.logger.addHandler(console_handler)
         
-        # File handler for detailed logs
-        log_file = os.path.join(self.log_dir, f"{self.name}.log")
-        file_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
-        )
-        file_handler.setFormatter(detailed_formatter)
-        file_handler.setLevel(logging.DEBUG)
-        self.logger.addHandler(file_handler)
-        
-        # Error handler
-        error_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
-        error_handler = logging.handlers.RotatingFileHandler(
-            error_file, maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'
-        )
+        # Only add file handlers if not in serverless environment
+        if not is_serverless:
+            try:
+                # Create log directory
+                os.makedirs(self.log_dir, exist_ok=True)
+                
+                # File handler for detailed logs
+                log_file = os.path.join(self.log_dir, f"{self.name}.log")
+                file_handler = logging.handlers.RotatingFileHandler(
+                    log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
+                )
+                file_handler.setFormatter(detailed_formatter)
+                file_handler.setLevel(logging.DEBUG)
+                self.logger.addHandler(file_handler)
+                
+                # Error handler
+                error_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
+                error_handler = logging.handlers.RotatingFileHandler(
+                    error_file, maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'
+                )
+                error_handler.setFormatter(detailed_formatter)
+                error_handler.setLevel(logging.ERROR)
+                self.logger.addHandler(error_handler)
+            except (OSError, PermissionError) as e:
+                # If file logging fails, just log to console
+                self.logger.warning(f"File logging disabled due to: {e}")
         error_handler.setFormatter(detailed_formatter)
         error_handler.setLevel(logging.ERROR)
         self.logger.addHandler(error_handler)
@@ -252,7 +264,11 @@ class JsonHandler(logging.Handler):
         """Ensure the log directory exists."""
         directory = os.path.dirname(self.filename)
         if directory:
-            os.makedirs(directory, exist_ok=True)
+            try:
+                os.makedirs(directory, exist_ok=True)
+            except (OSError, PermissionError):
+                # Can't create directory, likely in serverless environment
+                pass
     
     def emit(self, record):
         """

@@ -7,10 +7,14 @@ import os
 import logging
 import logging.handlers
 from typing import Dict, Any, List
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Try to load environment variables if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv is not available, continue without it
+    pass
 
 
 class ScraperConfig:
@@ -116,10 +120,14 @@ class ScraperConfig:
     @classmethod
     def create_directories(cls) -> None:
         """Create necessary directories if they don't exist."""
-        os.makedirs(cls.DATA_DIR, exist_ok=True)
-        os.makedirs(cls.LOGS_DIR, exist_ok=True)
-        os.makedirs(cls.CSV_DIR, exist_ok=True)
-        os.makedirs(cls.JSON_DIR, exist_ok=True)
+        try:
+            os.makedirs(cls.DATA_DIR, exist_ok=True)
+            os.makedirs(cls.LOGS_DIR, exist_ok=True)
+            os.makedirs(cls.CSV_DIR, exist_ok=True)
+            os.makedirs(cls.JSON_DIR, exist_ok=True)
+        except (OSError, PermissionError):
+            # Can't create directories, likely in serverless environment
+            pass
     
     @classmethod
     def validate_price(cls, price: float) -> bool:
@@ -192,8 +200,8 @@ class ScraperLogger:
     
     def setup_logger(self) -> None:
         """Set up logger with file and console handlers."""
-        # Create log directory
-        os.makedirs(self.log_dir, exist_ok=True)
+        # Check if we're in a serverless/read-only environment
+        is_serverless = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME') or not self._can_write_to_dir()
         
         # Clear existing handlers to avoid duplicates
         self.logger.handlers.clear()
@@ -206,44 +214,66 @@ class ScraperLogger:
         simple_formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'
         )
-        json_formatter = JsonScrapingFormatter()
         
-        # Console handler
+        # Console handler (always available)
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(simple_formatter)
         console_handler.setLevel(logging.INFO)
         self.logger.addHandler(console_handler)
         
-        # File handler for detailed logs
-        scraper_log_file = os.path.join(self.log_dir, f"{self.name}.log")
-        file_handler = logging.handlers.RotatingFileHandler(
-            scraper_log_file,
-            maxBytes=ScraperConfig.LOG_MAX_BYTES,
-            backupCount=ScraperConfig.LOG_BACKUP_COUNT,
-            encoding='utf-8'
-        )
-        file_handler.setFormatter(detailed_formatter)
-        file_handler.setLevel(logging.DEBUG)
-        self.logger.addHandler(file_handler)
-        
-        # Error handler for critical issues
-        error_log_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
-        error_handler = logging.handlers.RotatingFileHandler(
-            error_log_file,
-            maxBytes=ScraperConfig.LOG_MAX_BYTES // 2,
-            backupCount=3,
-            encoding='utf-8'
-        )
-        error_handler.setFormatter(detailed_formatter)
-        error_handler.setLevel(logging.ERROR)
-        self.logger.addHandler(error_handler)
-        
-        # Structured JSON handler for analysis
-        json_log_file = os.path.join(self.log_dir, f"{self.name}_structured.jsonl")
-        json_handler = JsonScrapingHandler(json_log_file)
-        json_handler.setFormatter(json_formatter)
-        json_handler.setLevel(logging.INFO)
-        self.logger.addHandler(json_handler)
+        # Only add file handlers if not in serverless environment
+        if not is_serverless:
+            try:
+                # Create log directory
+                os.makedirs(self.log_dir, exist_ok=True)
+                
+                json_formatter = JsonScrapingFormatter()
+                
+                # File handler for detailed logs
+                scraper_log_file = os.path.join(self.log_dir, f"{self.name}.log")
+                file_handler = logging.handlers.RotatingFileHandler(
+                    scraper_log_file,
+                    maxBytes=ScraperConfig.LOG_MAX_BYTES,
+                    backupCount=ScraperConfig.LOG_BACKUP_COUNT,
+                    encoding='utf-8'
+                )
+                file_handler.setFormatter(detailed_formatter)
+                file_handler.setLevel(logging.DEBUG)
+                self.logger.addHandler(file_handler)
+                
+                # Error handler for critical issues
+                error_log_file = os.path.join(self.log_dir, f"{self.name}_errors.log")
+                error_handler = logging.handlers.RotatingFileHandler(
+                    error_log_file,
+                    maxBytes=ScraperConfig.LOG_MAX_BYTES // 2,
+                    backupCount=3,
+                    encoding='utf-8'
+                )
+                error_handler.setFormatter(detailed_formatter)
+                error_handler.setLevel(logging.ERROR)
+                self.logger.addHandler(error_handler)
+                
+                # Structured JSON handler for analysis
+                json_log_file = os.path.join(self.log_dir, f"{self.name}_structured.jsonl")
+                json_handler = JsonScrapingHandler(json_log_file)
+                json_handler.setFormatter(json_formatter)
+                json_handler.setLevel(logging.INFO)
+                self.logger.addHandler(json_handler)
+            except (OSError, PermissionError) as e:
+                # If file logging fails, just log to console
+                self.logger.warning(f"File logging disabled due to: {e}")
+    
+    def _can_write_to_dir(self) -> bool:
+        """Check if we can write to the log directory."""
+        try:
+            test_file = os.path.join(self.log_dir, '.write_test')
+            os.makedirs(self.log_dir, exist_ok=True)
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+            return True
+        except (OSError, PermissionError):
+            return False
     
     def log_scraping_start(self, operation: str, details: Dict[str, Any] = None) -> None:
         """
@@ -443,7 +473,11 @@ class JsonScrapingHandler(logging.Handler):
         """Ensure the log directory exists."""
         directory = os.path.dirname(self.filename)
         if directory:
-            os.makedirs(directory, exist_ok=True)
+            try:
+                os.makedirs(directory, exist_ok=True)
+            except (OSError, PermissionError):
+                # Can't create directory, likely in serverless environment
+                pass
     
     def emit(self, record):
         """Emit a log record to JSON file."""
@@ -451,6 +485,10 @@ class JsonScrapingHandler(logging.Handler):
             with open(self.filename, 'a', encoding='utf-8') as f:
                 f.write(self.format(record))
                 f.write('\n')
+        except (OSError, PermissionError):
+            # Can't write to file, likely in serverless environment
+            # Fall back to console logging
+            print(f"LOG: {self.format(record)}")
         except Exception:
             self.handleError(record)
 
