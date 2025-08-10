@@ -1,0 +1,43 @@
+tags:
+  - Authentication
+summary: Refresh token
+description: Renovar token de acesso
+parameters:
+  - name: token_data
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token
+      required:
+        - refresh_token
+responses:
+  200:
+    description: Token refreshed successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+            token_type:
+              type: string
+            expires_in:
+              type: integer
+        message:
+          type: string
+        timestamp:
+          type: string
+  400:
+    description: Missing refresh token
+  401:
+    description: Invalid refresh token
+  500:
+    description: Internal server error

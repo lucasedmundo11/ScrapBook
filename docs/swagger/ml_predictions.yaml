@@ -1,0 +1,108 @@
+tags:
+  - Machine Learning
+summary: ML Predictions
+description: Endpoint para receber e processar predições de modelos ML
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - name: prediction_data
+    in: body
+    required: true
+    description: Dados para predição
+    schema:
+      type: object
+      properties:
+        book_id:
+          type: integer
+          description: Book ID for prediction
+          example: 1
+        features:
+          type: object
+          description: Feature data for prediction
+          example:
+            title_length: 18
+            price: 51.77
+            category: "Poetry"
+      required:
+        - book_id
+        - features
+responses:
+  200:
+    description: Predictions generated successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            model_version:
+              type: string
+              example: "1.0.0"
+            predictions:
+              type: array
+              items:
+                type: object
+                properties:
+                  book_id:
+                    type: integer
+                    example: 1
+                  predicted_rating:
+                    type: number
+                    example: 4.2
+                  confidence:
+                    type: number
+                    example: 0.85
+                  category_probability:
+                    type: object
+                    example:
+                      Fiction: 0.7
+                      Mystery: 0.2
+                      Romance: 0.1
+            processing_time:
+              type: number
+              example: 0.045
+        message:
+          type: string
+          example: "Predictions generated successfully"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  400:
+    description: Missing request body
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "MISSING_REQUEST_BODY"
+            message:
+              type: string
+              example: "Request body is required"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "PREDICTION_ERROR"
+            message:
+              type: string
+              example: "Failed to generate predictions"

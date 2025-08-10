@@ -1,0 +1,159 @@
+tags:
+  - User Management
+summary: Create new user
+description: Criar novo usuário (apenas admins) - Requires admin privileges
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - name: user_data
+    in: body
+    required: true
+    description: User creation data
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Unique username
+          example: "newuser"
+        email:
+          type: string
+          description: User email address
+          example: "newuser@example.com"
+        password:
+          type: string
+          description: User password (minimum 6 characters)
+          example: "password123"
+        is_admin:
+          type: boolean
+          description: Whether user should have admin privileges
+          example: false
+      required:
+        - username
+        - email
+        - password
+responses:
+  201:
+    description: User created successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 2
+            username:
+              type: string
+              example: "newuser"
+            email:
+              type: string
+              example: "newuser@example.com"
+            is_active:
+              type: boolean
+              example: true
+            is_admin:
+              type: boolean
+              example: false
+            created_at:
+              type: string
+              example: "2025-08-10T15:30:00"
+        message:
+          type: string
+          example: "User created successfully"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  400:
+    description: Bad request - Missing or invalid data
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "MISSING_REQUEST_BODY"
+            message:
+              type: string
+              example: "Request body is required"
+  401:
+    description: Unauthorized - Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  403:
+    description: Forbidden - Admin privileges required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_PERMISSIONS"
+            message:
+              type: string
+              example: "Admin privileges required"
+  409:
+    description: Conflict - Username already exists
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "USER_ALREADY_EXISTS"
+            message:
+              type: string
+              example: "Username already exists"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "CREATE_USER_ERROR"
+            message:
+              type: string
+              example: "Failed to create user"

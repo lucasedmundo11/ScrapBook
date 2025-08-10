@@ -1,0 +1,111 @@
+tags:
+  - Books
+summary: List all books
+description: Lista todos os livros disponíveis na base de dados com paginação
+produces:
+  - application/json
+parameters:
+  - name: page
+    in: query
+    type: integer
+    default: 1
+    description: Page number
+  - name: limit
+    in: query
+    type: integer
+    default: 50
+    description: Items per page (max 100)
+  - name: category
+    in: query
+    type: string
+    description: Filter by category
+  - name: sort_by
+    in: query
+    type: string
+    enum: [title, price, rating]
+    description: Sort field
+  - name: sort_order
+    in: query
+    type: string
+    enum: [asc, desc]
+    default: asc
+    description: Sort order
+responses:
+  200:
+    description: Books retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            books:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: "A Light in the Attic"
+                  price:
+                    type: number
+                    example: 51.77
+                  rating:
+                    type: integer
+                    example: 3
+                  availability:
+                    type: string
+                    example: "In stock"
+                  category:
+                    type: string
+                    example: "Poetry"
+                  image_url:
+                    type: string
+                    example: "catalogue/images/products/51/51.jpg"
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  example: 1
+                total_pages:
+                  type: integer
+                  example: 20
+                total_books:
+                  type: integer
+                  example: 1000
+                has_next:
+                  type: boolean
+                  example: true
+                has_prev:
+                  type: boolean
+                  example: false
+        message:
+          type: string
+          example: "Retrieved 50 books"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "FETCH_BOOKS_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch books"

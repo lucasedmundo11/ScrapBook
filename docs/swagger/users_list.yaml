@@ -1,0 +1,103 @@
+tags:
+  - User Management
+summary: List all users
+description: Lista todos os usuários (apenas admins) - Requires admin privileges
+produces:
+  - application/json
+security:
+  - Bearer: []
+responses:
+  200:
+    description: Users retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  username:
+                    type: string
+                    example: "admin"
+                  email:
+                    type: string
+                    example: "admin@example.com"
+                  is_active:
+                    type: boolean
+                    example: true
+                  is_admin:
+                    type: boolean
+                    example: true
+                  created_at:
+                    type: string
+                    example: "2025-08-10T15:30:00"
+                  updated_at:
+                    type: string
+                    example: "2025-08-10T15:30:00"
+        message:
+          type: string
+          example: "Retrieved 5 users"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  401:
+    description: Unauthorized - Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  403:
+    description: Forbidden - Admin privileges required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_PERMISSIONS"
+            message:
+              type: string
+              example: "Admin privileges required"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "FETCH_USERS_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch users"

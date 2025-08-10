@@ -1,0 +1,178 @@
+tags:
+  - User Management
+summary: Update user
+description: Atualizar dados de usuário (apenas admins ou o próprio usuário)
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - name: user_id
+    in: path
+    type: integer
+    required: true
+    description: User ID to update
+    example: 2
+  - name: user_data
+    in: body
+    required: true
+    description: User update data
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: New username (optional)
+          example: "updateduser"
+        email:
+          type: string
+          description: New email address (optional)
+          example: "updated@example.com"
+        is_admin:
+          type: boolean
+          description: Admin privileges (only admins can modify this)
+          example: false
+        is_active:
+          type: boolean
+          description: Account status (only admins can modify this)
+          example: true
+responses:
+  200:
+    description: User updated successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 2
+            username:
+              type: string
+              example: "updateduser"
+            email:
+              type: string
+              example: "updated@example.com"
+            is_active:
+              type: boolean
+              example: true
+            is_admin:
+              type: boolean
+              example: false
+            updated_at:
+              type: string
+              example: "2025-08-10T16:00:00"
+        message:
+          type: string
+          example: "User updated successfully"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  400:
+    description: Bad request - Missing or invalid data
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "MISSING_REQUEST_BODY"
+            message:
+              type: string
+              example: "Request body is required"
+  401:
+    description: Unauthorized - Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  403:
+    description: Forbidden - Insufficient permissions
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_PERMISSIONS"
+            message:
+              type: string
+              example: "You can only update your own profile or need admin privileges"
+  404:
+    description: User not found
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "USER_NOT_FOUND"
+            message:
+              type: string
+              example: "User not found"
+  409:
+    description: Conflict - Username already exists
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "USERNAME_EXISTS"
+            message:
+              type: string
+              example: "Username already exists"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UPDATE_USER_ERROR"
+            message:
+              type: string
+              example: "Failed to update user"

@@ -1,0 +1,61 @@
+tags:
+  - Health
+summary: API Health Check
+description: Verify API status and data connectivity
+produces:
+  - application/json
+responses:
+  200:
+    description: API is healthy
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "healthy"
+            database_connection:
+              type: string
+              example: "active"
+            total_books:
+              type: integer
+              example: 1000
+            last_update:
+              type: string
+              example: "2025-08-09T15:30:00"
+            api_version:
+              type: string
+              example: "v1.0.0"
+        message:
+          type: string
+          example: "API is healthy"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  500:
+    description: Health check failed
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "HEALTH_CHECK_FAILED"
+            message:
+              type: string
+              example: "Health check failed"
+            details:
+              type: object
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"

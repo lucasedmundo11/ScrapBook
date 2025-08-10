@@ -1,0 +1,54 @@
+tags:
+  - Books
+summary: Books by price range
+description: Filtra livros dentro de uma faixa de preço específica
+parameters:
+  - name: min
+    in: query
+    type: number
+    required: true
+    description: Minimum price
+  - name: max
+    in: query
+    type: number
+    required: true
+    description: Maximum price
+  - name: page
+    in: query
+    type: integer
+    default: 1
+    description: Page number
+  - name: limit
+    in: query
+    type: integer
+    default: 50
+    description: Items per page
+responses:
+  200:
+    description: Books in price range retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            books:
+              type: array
+              items:
+                type: object
+            total:
+              type: integer
+            page:
+              type: integer
+            pages:
+              type: integer
+        message:
+          type: string
+        timestamp:
+          type: string
+  400:
+    description: Invalid price range
+  500:
+    description: Internal server error

@@ -1,0 +1,45 @@
+tags:
+  - Machine Learning
+summary: Training Data
+description: Dataset formatado para treinamento de modelos ML
+parameters:
+  - name: format
+    in: query
+    type: string
+    default: json
+    enum: [json, csv]
+    description: Output format (json/csv)
+  - name: features
+    in: query
+    type: string
+    description: Comma-separated feature list
+responses:
+  200:
+    description: Training data retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            training_data:
+              type: array
+              items:
+                type: object
+            metadata:
+              type: object
+              properties:
+                total_samples:
+                  type: integer
+                feature_count:
+                  type: integer
+                format:
+                  type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+  500:
+    description: Internal server error

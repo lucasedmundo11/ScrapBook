@@ -1,0 +1,108 @@
+tags:
+  - Authentication
+summary: User login
+description: Obter token de autenticação JWT
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - name: credentials
+    in: body
+    required: true
+    description: User credentials
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+          example: "admin"
+        password:
+          type: string
+          description: Password
+          example: "admin123"
+      required:
+        - username
+        - password
+responses:
+  200:
+    description: Login successful
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+            refresh_token:
+              type: string
+              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+            token_type:
+              type: string
+              example: "bearer"
+            expires_in:
+              type: integer
+              example: 1800
+        message:
+          type: string
+          example: "Login successful"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  400:
+    description: Missing credentials or invalid request
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "MISSING_CREDENTIALS"
+            message:
+              type: string
+              example: "Username and password are required"
+  401:
+    description: Invalid credentials
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_CREDENTIALS"
+            message:
+              type: string
+              example: "Invalid username or password"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "LOGIN_ERROR"
+            message:
+              type: string
+              example: "Login failed"

@@ -1,0 +1,34 @@
+tags:
+  - Statistics
+summary: Category statistics
+description: Estatísticas detalhadas por categoria
+responses:
+  200:
+    description: Category statistics retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            category_stats:
+              type: array
+              items:
+                type: object
+                properties:
+                  category:
+                    type: string
+                  total_books:
+                    type: integer
+                  avg_price:
+                    type: number
+                  avg_rating:
+                    type: number
+        message:
+          type: string
+        timestamp:
+          type: string
+  500:
+    description: Internal server error

@@ -1,0 +1,139 @@
+tags:
+  - Administration
+summary: List Scraping Jobs
+description: Listar todos os jobs de scraping (requer autenticação de admin)
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - name: page
+    in: query
+    type: integer
+    default: 1
+    description: Page number
+  - name: limit
+    in: query
+    type: integer
+    default: 10
+    description: Jobs per page (max 50)
+responses:
+  200:
+    description: Scraping jobs retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            jobs:
+              type: array
+              items:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    example: "scraping_job_20250810_103000"
+                  status:
+                    type: string
+                    enum: ["started", "running", "completed", "failed"]
+                    example: "completed"
+                  started_at:
+                    type: string
+                    example: "2025-08-10T10:30:00Z"
+                  completed_at:
+                    type: string
+                    example: "2025-08-10T10:45:00Z"
+                  started_by:
+                    type: string
+                    example: "admin"
+                  result:
+                    type: object
+                    properties:
+                      books_scraped:
+                        type: integer
+                        example: 1000
+                      categories_found:
+                        type: integer
+                        example: 50
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  example: 1
+                total_jobs:
+                  type: integer
+                  example: 25
+                jobs_per_page:
+                  type: integer
+                  example: 10
+                total_pages:
+                  type: integer
+                  example: 3
+                has_next:
+                  type: boolean
+                  example: true
+                has_prev:
+                  type: boolean
+                  example: false
+        message:
+          type: string
+          example: "Retrieved 10 scraping jobs"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  401:
+    description: Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  403:
+    description: Insufficient permissions - Admin required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_PERMISSIONS"
+            message:
+              type: string
+              example: "Admin privileges required to list scraping jobs"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "SCRAPING_JOBS_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch scraping jobs"

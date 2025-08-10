@@ -1,0 +1,62 @@
+tags:
+  - Statistics
+summary: Overview Statistics
+description: Estatísticas gerais da coleção de livros
+produces:
+  - application/json
+responses:
+  200:
+    description: Overview statistics retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            total_books:
+              type: integer
+              example: 1000
+            total_categories:
+              type: integer
+              example: 50
+            avg_price:
+              type: number
+              example: 35.89
+            avg_rating:
+              type: number
+              example: 3.8
+            price_range:
+              type: object
+              properties:
+                min:
+                  type: number
+                  example: 10.00
+                max:
+                  type: number
+                  example: 99.99
+        message:
+          type: string
+          example: "Overview statistics retrieved successfully"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "STATS_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch overview statistics"

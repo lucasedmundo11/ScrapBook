@@ -1,0 +1,98 @@
+tags:
+  - User Management
+summary: Get current user profile
+description: Obter informações do perfil do usuário autenticado
+produces:
+  - application/json
+security:
+  - Bearer: []
+responses:
+  200:
+    description: Current user profile retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            username:
+              type: string
+              example: "admin"
+            email:
+              type: string
+              example: "admin@example.com"
+            is_active:
+              type: boolean
+              example: true
+            is_admin:
+              type: boolean
+              example: true
+            created_at:
+              type: string
+              example: "2025-08-10T15:30:00"
+            updated_at:
+              type: string
+              example: "2025-08-10T15:30:00"
+        message:
+          type: string
+          example: "Current user profile retrieved"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  401:
+    description: Unauthorized - Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  404:
+    description: User not found
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "USER_NOT_FOUND"
+            message:
+              type: string
+              example: "User not found"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "FETCH_USER_PROFILE_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch user profile"

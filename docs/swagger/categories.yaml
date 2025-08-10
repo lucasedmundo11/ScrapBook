@@ -1,0 +1,46 @@
+tags:
+  - Categories
+summary: List all categories
+description: Lista todas as categorias de livros disponíveis
+produces:
+  - application/json
+responses:
+  200:
+    description: Categories retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            categories:
+              type: array
+              items:
+                type: string
+              example: ["Poetry", "Fiction", "Mystery", "Romance", "Historical Fiction"]
+        message:
+          type: string
+          example: "Retrieved 50 categories"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "FETCH_CATEGORIES_ERROR"
+            message:
+              type: string
+              example: "Failed to fetch categories"

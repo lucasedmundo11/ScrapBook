@@ -1,0 +1,47 @@
+tags:
+  - Books
+summary: Top rated books
+description: Lista os livros com melhor avaliação
+parameters:
+  - name: limit
+    in: query
+    type: integer
+    default: 10
+    description: Number of top books to return
+  - name: min_rating
+    in: query
+    type: integer
+    default: 4
+    description: Minimum rating
+responses:
+  200:
+    description: Top rated books retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            top_rated_books:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  price:
+                    type: number
+                  rating:
+                    type: integer
+                  category:
+                    type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+  500:
+    description: Internal server error

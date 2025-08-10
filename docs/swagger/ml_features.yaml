@@ -1,0 +1,36 @@
+tags:
+  - Machine Learning
+summary: ML Features
+description: Dados formatados para features de Machine Learning
+responses:
+  200:
+    description: ML features retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            features:
+              type: array
+              items:
+                type: string
+            data:
+              type: array
+              items:
+                type: object
+            metadata:
+              type: object
+              properties:
+                total_samples:
+                  type: integer
+                feature_count:
+                  type: integer
+        message:
+          type: string
+        timestamp:
+          type: string
+  500:
+    description: Internal server error

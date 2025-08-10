@@ -1,0 +1,116 @@
+tags:
+  - Administration
+summary: Trigger Scraping
+description: Disparar processo de scraping manualmente (requer autenticação de admin)
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - name: scraping_params
+    in: body
+    required: false
+    description: Optional scraping parameters
+    schema:
+      type: object
+      properties:
+        extract_full_details:
+          type: boolean
+          description: Whether to extract full book details
+          example: true
+        max_pages:
+          type: integer
+          description: Maximum number of pages to scrape (null for all pages)
+          example: 10
+responses:
+  202:
+    description: Scraping job started successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            job_id:
+              type: string
+              example: "scraping_job_20250810_103000"
+            status:
+              type: string
+              example: "started"
+            started_at:
+              type: string
+              example: "2025-08-10T10:30:00Z"
+            parameters:
+              type: object
+              properties:
+                extract_full_details:
+                  type: boolean
+                  example: true
+                max_pages:
+                  type: integer
+                  example: 10
+            message:
+              type: string
+              example: "Scraping job started successfully. Use GET /api/v1/scraping/status/{job_id} to check progress."
+        message:
+          type: string
+          example: "Scraping process started successfully"
+        timestamp:
+          type: string
+          example: "2025-08-10T10:30:00Z"
+  401:
+    description: Authentication required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+  403:
+    description: Insufficient permissions - Admin required
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_PERMISSIONS"
+            message:
+              type: string
+              example: "Admin privileges required to trigger scraping"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "SCRAPING_TRIGGER_ERROR"
+            message:
+              type: string
+              example: "Failed to trigger scraping process"

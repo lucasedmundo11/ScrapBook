@@ -1,0 +1,131 @@
+tags:
+  - Books
+summary: Search books
+description: Busca livros por título, categoria e outros filtros
+produces:
+  - application/json
+parameters:
+  - name: title
+    in: query
+    type: string
+    description: Search by title (partial matching)
+    example: "Light"
+  - name: category
+    in: query
+    type: string
+    description: Filter by category
+    example: "Poetry"
+  - name: min_price
+    in: query
+    type: number
+    description: Minimum price
+    example: 10.0
+  - name: max_price
+    in: query
+    type: number
+    description: Maximum price
+    example: 100.0
+  - name: rating
+    in: query
+    type: integer
+    description: Filter by rating (1-5)
+    example: 3
+  - name: page
+    in: query
+    type: integer
+    default: 1
+    description: Page number
+    example: 1
+  - name: limit
+    in: query
+    type: integer
+    default: 50
+    description: Items per page (max 100)
+    example: 20
+responses:
+  200:
+    description: Search results retrieved successfully
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            books:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: "A Light in the Attic"
+                  price:
+                    type: number
+                    example: 51.77
+                  rating:
+                    type: integer
+                    example: 3
+                  availability:
+                    type: string
+                    example: "In stock"
+                  category:
+                    type: string
+                    example: "Poetry"
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  example: 1
+                total_pages:
+                  type: integer
+                  example: 5
+                total_books:
+                  type: integer
+                  example: 95
+        message:
+          type: string
+          example: "Found 95 books matching search criteria"
+        timestamp:
+          type: string
+          example: "2025-08-09T10:30:00Z"
+  400:
+    description: Invalid search parameters
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_SEARCH_PARAMS"
+            message:
+              type: string
+              example: "At least one search parameter is required"
+  500:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "SEARCH_ERROR"
+            message:
+              type: string
+              example: "Failed to search books"
