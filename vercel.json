@@ -14,10 +14,5 @@
   ],
   "env": {
     "VERCEL": "1"
-  },
-  "functions": {
-    "src/api/main.py": {
-      "maxDuration": 30
-    }
   }
 }
