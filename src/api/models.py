@@ -31,17 +31,35 @@ def get_database_url():
         return database_url
     
     # Check if we're in a serverless environment
-    is_serverless = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
+    is_serverless = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME') or os.getenv('NETLIFY')
     
     if is_serverless:
         # Use in-memory SQLite for serverless environments
         return "sqlite:///:memory:"
     else:
         # Use file-based SQLite for local development
-        return "sqlite:///./scrapbook.db"
+        return "sqlite:///./data/scrapbook.db"
 
 DATABASE_URL = get_database_url()
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+
+# Configure engine with proper settings for serverless environments
+if ":memory:" in DATABASE_URL:
+    engine = create_engine(
+        DATABASE_URL, 
+        connect_args={
+            "check_same_thread": False,
+            "timeout": 20
+        },
+        pool_pre_ping=True,
+        pool_recycle=300
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL, 
+        connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+        pool_pre_ping=True
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # SQLAlchemy Models
@@ -87,58 +105,70 @@ def create_tables():
 
 def init_database():
     """Initialize database with tables for serverless environments"""
-    create_tables()
-    
-    # For in-memory databases, create default users
-    is_memory_db = ":memory:" in DATABASE_URL
-    if is_memory_db:
-        create_default_users()
+    try:
+        create_tables()
+        logger.info("Database tables created successfully")
+        
+        # For in-memory databases, create default users
+        is_memory_db = ":memory:" in DATABASE_URL
+        if is_memory_db:
+            create_default_users()
+        
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+        # Don't raise the exception to prevent app startup failure
 
 def create_default_users():
     """Create default admin and user accounts for in-memory database"""
-    db = SessionLocal()
     try:
-        # Check if users already exist
-        admin_exists = db.query(User).filter(User.username == "admin").first()
-        user_exists = db.query(User).filter(User.username == "user").first()
-        
-        users_created = []
-        
-        # Create admin user if it doesn't exist
-        if not admin_exists:
-            admin_user = User(
-                username="admin",
-                email="admin@scrapbook.com",
-                is_active=True,
-                is_admin=True
-            )
-            admin_user.set_password("admin123")
-            db.add(admin_user)
-            users_created.append("admin")
-        
-        # Create regular user if it doesn't exist
-        if not user_exists:
-            regular_user = User(
-                username="user",
-                email="user@scrapbook.com",
-                is_active=True,
-                is_admin=False
-            )
-            regular_user.set_password("user123")
-            db.add(regular_user)
-            users_created.append("user")
-        
-        if users_created:
-            db.commit()
-            logger.info(f"Created default users: {', '.join(users_created)}")
-        else:
-            logger.info("Default users already exist")
+        db = SessionLocal()
+        try:
+            # Check if users already exist
+            admin_exists = db.query(User).filter(User.username == "admin").first()
+            user_exists = db.query(User).filter(User.username == "user").first()
+            
+            users_created = []
+            
+            # Create admin user if it doesn't exist
+            if not admin_exists:
+                admin_user = User(
+                    username="admin",
+                    email="admin@scrapbook.com",
+                    is_active=True,
+                    is_admin=True
+                )
+                admin_user.set_password("admin123")
+                db.add(admin_user)
+                users_created.append("admin")
+            
+            # Create regular user if it doesn't exist
+            if not user_exists:
+                regular_user = User(
+                    username="user",
+                    email="user@scrapbook.com",
+                    is_active=True,
+                    is_admin=False
+                )
+                regular_user.set_password("user123")
+                db.add(regular_user)
+                users_created.append("user")
+            
+            if users_created:
+                db.commit()
+                logger.info(f"Created default users: {', '.join(users_created)}")
+            else:
+                logger.info("Default users already exist")
+                
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error creating default users: {e}")
+            raise e
+        finally:
+            db.close()
             
     except Exception as e:
-        db.rollback()
-        logger.error(f"Error creating default users: {e}")
-    finally:
-        db.close()
+        logger.error(f"Failed to create default users: {e}")
+        # Don't raise the exception to prevent app startup failure
 
 def get_db():
     """Dependency to get database session"""

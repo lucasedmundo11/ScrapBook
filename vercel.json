@@ -11,5 +11,13 @@
       "src": "/(.*)",
       "dest": "src/api/main.py"
     }
-  ]
+  ],
+  "env": {
+    "VERCEL": "1"
+  },
+  "functions": {
+    "src/api/main.py": {
+      "maxDuration": 30
+    }
+  }
 }
