@@ -9,7 +9,7 @@ from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from src.api.models import User, SessionLocal, create_tables
+from src.api.models import User, SessionLocal, create_tables, init_database
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,49 +19,8 @@ class UserService:
     
     def __init__(self):
         """Initialize the service and create tables if they don't exist"""
-        create_tables()
-        self._create_default_users()
-    
-    def _create_default_users(self):
-        """Create default admin and user accounts"""
-        db = SessionLocal()
-        try:
-            # Check if users already exist
-            admin_exists = db.query(User).filter(User.username == "admin").first()
-            user_exists = db.query(User).filter(User.username == "user").first()
-            
-            if not admin_exists:
-                admin = User(
-                    username="admin",
-                    email="admin@scrapbook.local",
-                    is_admin=True,
-                    is_active=True
-                )
-                admin.set_password("admin123")
-                db.add(admin)
-                logger.info("Created default admin user")
-            
-            if not user_exists:
-                user = User(
-                    username="user",
-                    email="user@scrapbook.local",
-                    is_admin=False,
-                    is_active=True
-                )
-                user.set_password("user123")
-                db.add(user)
-                logger.info("Created default user")
-            
-            db.commit()
-            
-        except IntegrityError as e:
-            db.rollback()
-            logger.warning(f"Default users already exist: {e}")
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error creating default users: {e}")
-        finally:
-            db.close()
+        init_database()
+        # Default users are now created automatically by init_database()
     
     def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """Authenticate user credentials"""
