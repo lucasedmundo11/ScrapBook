@@ -96,7 +96,24 @@ class BaseScraper:
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
             
-            soup = BeautifulSoup(response.content, 'lxml')
+            # Try parsers in order of preference: lxml -> html5lib -> html.parser
+            parsers = ['lxml', 'html5lib', 'html.parser']
+            soup = None
+            
+            for parser in parsers:
+                try:
+                    soup = BeautifulSoup(response.content, parser)
+                    logger.debug(f"Successfully used {parser} parser")
+                    break
+                except Exception as parser_error:
+                    logger.warning(f"{parser} parser not available: {str(parser_error)}")
+                    continue
+            
+            if soup is None:
+                # Last resort - try without specifying parser
+                soup = BeautifulSoup(response.content)
+                logger.warning("Using BeautifulSoup default parser")
+            
             return soup
             
         except requests.exceptions.RequestException as e:
